@@ -1,0 +1,75 @@
+services:
+
+  # MYSQL DATABASE
+  package-db:
+    image: mysql:8.4
+    container_name: package-db
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: package_db
+      MYSQL_USER: package_user
+      MYSQL_PASSWORD: package_password
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - package_mysql_data:/var/lib/mysql
+
+    networks:
+      - microservice-network
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "package_user",
+          "-ppackage_password"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+
+  # PACKAGE SERVICE
+  package-service:
+    build:
+      context: ./package-service
+
+    container_name: package-service
+
+    restart: unless-stopped
+
+    ports:
+      - "3001:3001"
+
+    environment:
+      DB_HOST: package-db
+      DB_NAME: package_db
+      DB_USER: package_user
+      DB_PASSWORD: package_password
+
+    depends_on:
+      package-db:
+        condition: service_healthy
+
+    networks:
+      - microservice-network
+
+
+# NETWORK
+networks:
+  microservice-network:
+    driver: bridge
+
+
+# VOLUME
+volumes:
+  package_mysql_data:
