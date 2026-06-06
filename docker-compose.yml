@@ -37,6 +37,31 @@ services:
       retries: 10
       start_period: 10s
 
+   # MONGO DATABASE(BOOKING SERVICE)
+  booking-db:
+    image: mongo:8
+    container_name: booking-db
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: booking_user
+      MONGO_INITDB_ROOT_PASSWORD: booking_password
+      MONGO_INITDB_DATABASE: booking_db
+
+    ports:
+      - "27018:27017"
+
+    volumes:
+      - booking_mongo_data:/data/db
+
+    networks:
+      - microservice-network
+    
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   # PACKAGE SERVICE
   package-service:
@@ -63,6 +88,30 @@ services:
     networks:
       - microservice-network
 
+# BOOKING SERVICE
+  booking-service:
+    build: ./booking-service
+    
+    container_name: booking-service
+
+    restart: unless-stopped
+    
+    ports:
+      - "3002:3002"
+
+    environment:
+      PACKAGE_SERVICE_URL: http://package-service:3001
+      MONGO_URI: mongodb://booking_user:booking_password@booking-db:27017/booking_db?authSource=admin
+    
+    depends_on:
+      booking-db:
+        condition: service_healthy
+
+      package-service:
+        condition: service_started
+        
+    networks:
+      - microservice-network
 
 # NETWORK
 networks:
@@ -73,3 +122,4 @@ networks:
 # VOLUME
 volumes:
   package_mysql_data:
+  booking_mongo_data:
