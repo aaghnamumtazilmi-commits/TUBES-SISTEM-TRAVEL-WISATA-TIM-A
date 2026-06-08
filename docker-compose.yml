@@ -177,6 +177,22 @@ services:
       - microservice-network
 
 
+  # REVIEW SERVICE
+  review-service:
+    build:
+      context: ./review-service
+
+    container_name: review-service
+
+    restart: unless-stopped
+
+    ports:
+      - "8003:8003"
+
+    networks:
+      - microservice-network
+
+
 # NETWORK
 networks:
   microservice-network:
