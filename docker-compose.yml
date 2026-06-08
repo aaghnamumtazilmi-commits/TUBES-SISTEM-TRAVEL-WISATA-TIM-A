@@ -94,6 +94,42 @@ services:
       retries: 10
       start_period: 10s
 
+  # MYSQL DATABASE (REVIEW SERVICE)
+  review-db:
+    image: mysql:8.4
+    container_name: review-db
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: review_db
+      MYSQL_USER: review_user
+      MYSQL_PASSWORD: review_password
+
+    ports:
+      - "3308:3306"
+
+    volumes:
+      - review_mysql_data:/var/lib/mysql
+
+    networks:
+      - microservice-network
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "review_user",
+          "-preview_password"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   # PACKAGE SERVICE
   package-service:
@@ -189,6 +225,23 @@ services:
     ports:
       - "8003:8003"
 
+    environment:
+      APP_ENV: local
+      APP_DEBUG: true
+      APP_KEY: base64:xF3mlJ9zp1q8Q/zBXBexzgtTfcMsmHPxW8zNuLgDXU0=
+      APP_URL: http://localhost:8003
+
+      DB_CONNECTION: mysql
+      DB_HOST: review-db
+      DB_PORT: 3306
+      DB_DATABASE: review_db
+      DB_USERNAME: review_user
+      DB_PASSWORD: review_password
+
+    depends_on:
+      review-db:
+        condition: service_healthy
+
     networks:
       - microservice-network
 
@@ -204,3 +257,4 @@ volumes:
   package_mysql_data:
   booking_mongo_data:
   analytics_postgres_data:
+  review_mysql_data:

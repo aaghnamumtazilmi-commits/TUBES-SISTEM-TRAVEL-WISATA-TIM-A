@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reviews', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('destination_id');
-            $table->string('user_name', 100);
-            $table->integer('rating');
-            $table->text('comment');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('reviews')) {
+            Schema::create('reviews', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('destination_id');
+                $table->string('user_name', 100);
+                $table->integer('rating');
+                $table->text('comment');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
